@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Discipline</title>
+<style>
+body{background:#020617;color:#e5e7eb;font-family:Arial;margin:0}
+.container{max-width:480px;margin:auto;padding:20px}
+.task{background:#020617;padding:12px;margin-bottom:8px;border-radius:10px;display:flex;align-items:center}
+.task.checked{background:rgba(34,197,94,.15)}
+.task label{margin-left:10px}
+input{transform:scale(1.3)}
+button{width:100%;padding:14px;border:none;border-radius:10px;background:#22c55e;color:#022c22;font-weight:bold;margin-top:10px}
+.panel{background:#0f172a;padding:12px;border-radius:12px;margin-top:12px}
+.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:8px}
+.day{padding:8px;border-radius:6px;text-align:center;font-size:12px;cursor:pointer;background:#020617}
+.win{background:#22c55e;color:#022c22}
+.loss{background:#ef4444;color:white}
+.bar-bg{height:6px;background:#1e293b;border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;background:#22c55e}
+.bar-row{margin-bottom:12px}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div id="currentDate"></div>
+  <h2>Daily Discipline</h2>
+
+  <div id="tasks"></div>
+  <button id="saveBtn">Save Day</button>
+
+  <div id="stats" class="panel"></div>
+  <div id="weekly" class="panel"></div>
+  <div id="taskStats" class="panel"></div>
+  <div id="calendar" class="panel"></div>
+</div>
+
+<script>
+var tasks=[
+"Pray 5 Namaz","Box / Workout","6.5h Sleep","Quran","Book Reading",
+"Deep Work","Skin / Hair Care","Good Food + 3L Water","Communication Skills",
+"Mindfulness","Smart Finances","NBM"
+];
+var WIN=10;
+var currentDate="";
+
+function formatDate(iso){
+ var d=new Date(iso);
+ return d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+}
+function today(){ return new Date().toISOString().slice(0,10); }
+function load(){ return JSON.parse(localStorage.getItem("tracker")||"{}"); }
+function save(d){ localStorage.setItem("tracker",JSON.stringify(d)); }
+
+function buildTasks(){
+ var list=document.getElementById("tasks");
+ list.innerHTML="";
+ for(var i=0;i<tasks.length;i++){
+  var row=document.createElement("div");
+  row.className="task checked";
+  row.innerHTML='<input type="checkbox" id="t'+i+'" checked><label>'+tasks[i]+'</label>';
+  (function(r){
+    var cb=r.querySelector("input");
+    cb.onchange=function(){ r.className=cb.checked?"task checked":"task"; };
+  })(row);
+  list.appendChild(row);
+ }
+}
+
+function loadDay(date){
+ currentDate=date;
+ document.getElementById("currentDate").innerText=formatDate(date);
+ var d=load()[date];
+ for(var i=0;i<tasks.length;i++){
+  var cb=document.getElementById("t"+i);
+  cb.checked=d?!!d.tasks[i]:true;
+  cb.onchange();
+ }
+}
+
+function saveDay(){
+ var d=load(),c=0,a=[];
+ for(var i=0;i<tasks.length;i++){
+  var v=document.getElementById("t"+i).checked;
+  if(v)c++; a.push(v);
+ }
+ d[currentDate]={completed:c,result:c>=WIN?"W":"L",tasks:a};
+ save(d); render();
+}
+
+function render(){
+ var d=load(),keys=Object.keys(d).sort();
+ var wins=0,losses=0,streak=0,best=0;
+ for(var i=0;i<keys.length;i++){
+  if(d[keys[i]].result==="W"){wins++;streak++;if(streak>best)best=streak;}
+  else{losses++;streak=0;}
+ }
+ document.getElementById("stats").innerHTML="Wins: "+wins+" | Losses: "+losses+"<br>Current streak: "+streak+" | Best: "+best;
+ renderWeekly(d); renderTaskStats(d); renderCalendar(d);
+}
+
+function renderWeekly(d){
+ var now=new Date(),w=0,l=0;
+ for(var i=6;i>=0;i--){
+  var x=new Date(); x.setDate(now.getDate()-i);
+  var k=x.toISOString().slice(0,10);
+  if(d[k]) d[k].result==="W"?w++:l++;
+ }
+ document.getElementById("weekly").innerHTML="This week — Wins: "+w+" | Losses: "+l;
+}
+
+function renderTaskStats(d){
+ var total=new Array(tasks.length).fill(0),days=0;
+ for(var k in d){
+  if(d[k].tasks){days++; for(var i=0;i<tasks.length;i++) if(d[k].tasks[i]) total[i]++; }
+ }
+ var html="Consistency<br>";
+ for(var i=0;i<tasks.length;i++){
+  var p=days?Math.round(total[i]/days*100):0;
+  html+='<div class="bar-row">'+tasks[i]+": "+p+'%<div class="bar-bg"><div class="bar-fill" style="width:'+p+'%"></div></div></div>';
+ }
+ document.getElementById("taskStats").innerHTML=html;
+}
+
+function renderCalendar(d){
+ var now=new Date(),y=now.getFullYear(),m=now.getMonth();
+ var first=new Date(y,m,1).getDay(),dim=new Date(y,m+1,0).getDate();
+ var html=now.toLocaleString('default',{month:'long'})+" "+y+'<div class="calendar">';
+ for(var i=0;i<first;i++) html+="<div></div>";
+ for(var i=1;i<=dim;i++){
+  var k=y+"-"+String(m+1).padStart(2,"0")+"-"+String(i).padStart(2,"0");
+  var r=d[k]?d[k].result:"";
+  html+='<div class="day '+(r==="W"?"win":r==="L"?"loss":"")+'" onclick="loadDay(\''+k+'\')">'+i+'</div>';
+ }
+ html+="</div>";
+ document.getElementById("calendar").innerHTML=html;
+}
+
+document.getElementById("saveBtn").onclick=saveDay;
+buildTasks();
+loadDay(today());
+render();
+</script>
+
+</body>
+</html>
