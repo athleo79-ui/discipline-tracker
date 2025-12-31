@@ -19,6 +19,8 @@ button{width:100%;padding:14px;border:none;border-radius:10px;background:#22c55e
 .loss{background:#ef4444;color:white}
 .small{font-size:12px;color:#94a3b8}
 .score-row{display:flex;justify-content:space-between;font-size:14px;margin-bottom:6px}
+.cal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.cal-btn{background:#1e293b;color:#e5e7eb;border:none;border-radius:6px;padding:4px 10px;font-size:14px}
 </style>
 </head>
 <body>
@@ -33,6 +35,7 @@ button{width:100%;padding:14px;border:none;border-radius:10px;background:#22c55e
   <div id="stats" class="panel"></div>
   <div id="weekly" class="panel"></div>
   <div id="taskStats" class="panel"></div>
+
   <div id="calendar" class="panel"></div>
 </div>
 
@@ -44,6 +47,7 @@ var tasks=[
 ];
 var WIN=10;
 var currentDate="";
+var viewDate=new Date();
 
 function today(){ return new Date().toISOString().slice(0,10); }
 function formatDate(iso){
@@ -126,9 +130,12 @@ function renderTaskStats(d){
 }
 
 function renderCalendar(d){
-  var now=new Date(),y=now.getFullYear(),m=now.getMonth();
+  var y=viewDate.getFullYear(),m=viewDate.getMonth();
   var first=new Date(y,m,1).getDay(),dim=new Date(y,m+1,0).getDate();
-  var html=now.toLocaleString('default',{month:'long'})+" "+y+'<div class="calendar">';
+  var html='<div class="cal-head"><button class="cal-btn" onclick="prevMonth()">◀</button>'+
+           '<span>'+viewDate.toLocaleString('default',{month:'long'})+' '+y+'</span>'+
+           '<button class="cal-btn" onclick="nextMonth()">▶</button></div>'+
+           '<div class="calendar">';
   for(var i=0;i<first;i++) html+="<div></div>";
   for(var i=1;i<=dim;i++){
     var k=y+"-"+String(m+1).padStart(2,"0")+"-"+String(i).padStart(2,"0");
@@ -138,6 +145,9 @@ function renderCalendar(d){
   html+="</div>";
   document.getElementById("calendar").innerHTML=html;
 }
+
+function prevMonth(){ viewDate.setMonth(viewDate.getMonth()-1); render(); }
+function nextMonth(){ viewDate.setMonth(viewDate.getMonth()+1); render(); }
 
 document.getElementById("saveBtn").onclick=saveDay;
 buildTasks();
