@@ -17,10 +17,8 @@ button{width:100%;padding:14px;border:none;border-radius:10px;background:#22c55e
 .day{padding:8px;border-radius:6px;text-align:center;font-size:12px;cursor:pointer;background:#020617}
 .win{background:#22c55e;color:#022c22}
 .loss{background:#ef4444;color:white}
-.bar-bg{height:6px;background:#1e293b;border-radius:3px;overflow:hidden}
-.bar-fill{height:100%;background:#22c55e}
-.bar-row{margin-bottom:12px}
 .small{font-size:12px;color:#94a3b8}
+.score-row{display:flex;justify-content:space-between;font-size:14px;margin-bottom:6px}
 </style>
 </head>
 <body>
@@ -40,20 +38,10 @@ button{width:100%;padding:14px;border:none;border-radius:10px;background:#22c55e
 
 <script>
 var tasks=[
-"Pray 5 Namaz",
-"Box / Workout",
-"6.5h Sleep",
-"Quran",
-"Book Reading",
-"Deep Work",
-"Skin / Hair Care",
-"Good Food + 3L Water",
-"Communication Skills",
-"Mindfulness",
-"Smart Finances",
-"NBM"
+"Pray 5 Namaz","Box / Workout","6.5h Sleep","Quran","Book Reading",
+"Deep Work","Skin / Hair Care","Good Food + 3L Water","Communication Skills",
+"Mindfulness","Smart Finances","NBM"
 ];
-
 var WIN=10;
 var currentDate="";
 
@@ -130,12 +118,9 @@ function renderTaskStats(d){
       for(var i=0;i<tasks.length;i++) if(d[k].tasks[i]) total[i]++;
     }
   }
-  var html="<b>Consistency</b><br>";
+  var html="<b>Task Scorecard</b><br>";
   for(var i=0;i<tasks.length;i++){
-    var p=days?Math.round(total[i]/days*100):0;
-    html+='<div class="bar-row">'+tasks[i]+
-      ' — '+total[i]+'/'+days+
-      '<div class="bar-bg"><div class="bar-fill" style="width:'+p+'%"></div></div></div>';
+    html+='<div class="score-row"><span>'+tasks[i]+'</span><span>'+total[i]+' / '+days+'</span></div>';
   }
   document.getElementById("taskStats").innerHTML=html;
 }
